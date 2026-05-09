@@ -1,0 +1,10 @@
+<% content_for :title, "Edit Task" %>
+<% content_for :page_title, "Edit Task" %>
+
+<div class="form-page">
+  <div class="form-page-header">
+    <h2 class="form-page-title">Edit Task</h2>
+    <p class="form-page-subtitle"><%= @task.title %></p>
+  </div>
+  <%= render "form", task: @task %>
+</div>

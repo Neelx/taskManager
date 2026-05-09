@@ -1,0 +1,43 @@
+<% content_for :title, "Sign In" %>
+
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="brand-icon-lg">✓</div>
+      <h1 class="auth-brand-name">Taskmaster</h1>
+      <p class="auth-tagline">Organize your work.<br>Crush your goals.</p>
+    </div>
+    <div class="auth-features">
+      <div class="auth-feature"><span class="feature-icon">⚡</span> Blazing fast task management</div>
+      <div class="auth-feature"><span class="feature-icon">🎯</span> Priority-based organization</div>
+      <div class="auth-feature"><span class="feature-icon">📊</span> Beautiful dashboard insights</div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-subtitle">Sign in to your account</p>
+
+      <%= form_with url: login_path, id: "login-form" do |f| %>
+        <div class="form-group">
+          <%= f.label :email, "Email address", class: "form-label" %>
+          <%= f.email_field :email, class: "form-control", placeholder: "you@example.com",
+              id: "input-email", autocomplete: "email", required: true %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :password, "Password", class: "form-label" %>
+          <%= f.password_field :password, class: "form-control", placeholder: "••••••••",
+              id: "input-password", autocomplete: "current-password", required: true %>
+        </div>
+
+        <%= f.submit "Sign In", class: "btn btn-primary btn-full", id: "btn-login" %>
+      <% end %>
+
+      <p class="auth-switch">
+        Don't have an account? <%= link_to "Create one", signup_path, id: "link-signup" %>
+      </p>
+    </div>
+  </div>
+</div>

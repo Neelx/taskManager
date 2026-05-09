@@ -1,0 +1,176 @@
+<% content_for :title, "Dashboard" %>
+<% content_for :page_title, "Dashboard" %>
+
+<div class="dashboard">
+
+  <!-- Personalised greeting -->
+  <div class="greeting-bar">
+    <div>
+      <h2 class="greeting-text">
+        <%= Time.now.hour < 12 ? "Good morning" : Time.now.hour < 17 ? "Good afternoon" : "Good evening" %>,
+        <%= current_user.name.split.first %> 👋
+      </h2>
+      <p class="greeting-sub">
+        <% if @total == 0 %>
+          You have no tasks yet. Create your first one!
+        <% elsif @pending == 0 %>
+          🎉 All caught up! No pending tasks.
+        <% elsif @overdue > 0 %>
+          You have <strong><%= @overdue %> overdue</strong> and <strong><%= @pending %> pending</strong> <%= "task".pluralize(@pending) %>.
+        <% else %>
+          You have <strong><%= @pending %> pending</strong> <%= "task".pluralize(@pending) %> to work on.
+        <% end %>
+      </p>
+    </div>
+    <div class="greeting-meta">Member since <%= current_user.created_at.strftime("%b %Y") %></div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card stat-total" id="stat-total">
+      <div class="stat-icon">📋</div>
+      <div class="stat-body">
+        <div class="stat-number"><%= @total %></div>
+        <div class="stat-label">Total Tasks</div>
+      </div>
+      <div class="stat-bg-icon">📋</div>
+    </div>
+
+    <div class="stat-card stat-pending" id="stat-pending">
+      <div class="stat-icon">◷</div>
+      <div class="stat-body">
+        <div class="stat-number"><%= @pending %></div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-bg-icon">◷</div>
+    </div>
+
+    <div class="stat-card stat-completed" id="stat-completed">
+      <div class="stat-icon">✅</div>
+      <div class="stat-body">
+        <div class="stat-number"><%= @completed %></div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-bg-icon">✅</div>
+    </div>
+
+    <div class="stat-card stat-overdue" id="stat-overdue">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-body">
+        <div class="stat-number"><%= @overdue %></div>
+        <div class="stat-label">Overdue</div>
+      </div>
+      <div class="stat-bg-icon">⚠️</div>
+    </div>
+  </div>
+
+  <!-- Progress bar — only show if user has tasks -->
+  <% if @total > 0 %>
+    <% completion_pct = [(@completed.to_f / @total * 100).round, 100].min %>
+    <div class="progress-section" id="progress-section">
+      <div class="progress-header">
+        <span class="progress-label">Overall Progress</span>
+        <span class="progress-pct"><%= completion_pct %>% complete</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: <%= completion_pct %>%"></div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @total == 0 %>
+    <!-- Empty state for brand new users -->
+    <div class="onboarding-card" id="onboarding-card">
+      <div class="onboarding-icon">🚀</div>
+      <h3 class="onboarding-title">Welcome to Taskmaster!</h3>
+      <p class="onboarding-text">
+        You don't have any tasks yet. Start by creating your first task and take control of your work.
+      </p>
+      <%= link_to "+ Create Your First Task", new_task_path, class: "btn btn-primary btn-lg", id: "btn-first-task-onboard" %>
+    </div>
+  <% else %>
+    <div class="dashboard-grid">
+      <!-- Recent Tasks -->
+      <div class="dash-panel" id="panel-recent">
+        <div class="panel-header">
+          <h2 class="panel-title">Recent Tasks</h2>
+          <%= link_to "View all →", tasks_path, class: "panel-link", id: "link-view-all" %>
+        </div>
+
+        <div class="task-list" id="task-list-recent">
+          <% @recent_tasks.each do |task| %>
+            <div class="task-row <%= task.completed? ? 'task-done' : '' %> <%= task.overdue? ? 'task-overdue-row' : '' %>" id="task-<%= task.id %>">
+              <div class="task-check">
+                <%= button_to toggle_complete_task_path(task), method: :patch,
+                    class: "check-btn #{'checked' if task.completed?}",
+                    id: "toggle-#{task.id}",
+                    form: { data: { turbo: false } } do %>
+                  <%= task.completed? ? "✓" : "" %>
+                <% end %>
+              </div>
+              <div class="task-info">
+                <span class="task-title-text <%= 'strikethrough' if task.completed? %>"><%= task.title %></span>
+                <span class="task-meta">
+                  <% if task.due_date.present? %>
+                    <span class="<%= task.overdue? ? 'text-danger' : '' %>">
+                      <%= task.overdue? ? "⚠ Overdue · " : task.due_today? ? "📅 Due Today · " : "📅 " %>
+                      <%= task.due_date.strftime("%b %d, %Y") %>
+                    </span>
+                  <% else %>
+                    <span class="text-muted">No due date</span>
+                  <% end %>
+                </span>
+              </div>
+              <div class="task-badges">
+                <span class="badge badge-<%= task.priority %>"><%= task.priority_label %></span>
+              </div>
+              <div class="task-actions">
+                <%= link_to "✏", edit_task_path(task), class: "action-btn", id: "edit-task-#{task.id}", title: "Edit" %>
+                <%= button_to "✕", task_path(task), method: :delete, class: "action-btn action-delete",
+                    id: "delete-task-#{task.id}",
+                    form: { data: { turbo_confirm: "Delete '#{task.title}'?" } } %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- High Priority Panel -->
+      <div class="dash-panel" id="panel-priority">
+        <div class="panel-header">
+          <h2 class="panel-title">🔥 High Priority</h2>
+          <%= link_to "View all →", tasks_path(filter: "high"), class: "panel-link", id: "link-high-priority" %>
+        </div>
+
+        <% if @high_priority.empty? %>
+          <div class="empty-state-sm">
+            <p class="empty-sm-text">✨ No urgent tasks right now!</p>
+          </div>
+        <% else %>
+          <div class="priority-list" id="priority-list">
+            <% @high_priority.each do |task| %>
+              <div class="priority-item" id="priority-task-<%= task.id %>">
+                <div class="priority-dot <%= task.overdue? ? 'dot-overdue' : 'dot-high' %>"></div>
+                <div class="priority-info">
+                  <span class="priority-title"><%= task.title %></span>
+                  <% if task.due_date.present? %>
+                    <span class="priority-due <%= task.overdue? ? 'text-danger' : '' %>">
+                      <%= task.overdue? ? "⚠ Overdue" : "Due #{task.due_date.strftime('%b %d')}" %>
+                    </span>
+                  <% else %>
+                    <span class="priority-due text-muted">No due date</span>
+                  <% end %>
+                </div>
+                <%= link_to "→", edit_task_path(task), class: "priority-arrow", id: "priority-goto-#{task.id}" %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="quick-add-wrap">
+          <%= link_to "+ Add Task", new_task_path, class: "btn btn-ghost btn-full", id: "btn-quick-add" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

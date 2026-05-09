@@ -1,0 +1,63 @@
+<% content_for :title, "Sign Up" %>
+
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="brand-icon-lg">✓</div>
+      <h1 class="auth-brand-name">Taskmaster</h1>
+      <p class="auth-tagline">Start organizing.<br>Start achieving.</p>
+    </div>
+    <div class="auth-features">
+      <div class="auth-feature"><span class="feature-icon">🆓</span> Free to use, forever</div>
+      <div class="auth-feature"><span class="feature-icon">🔒</span> Your data, secured</div>
+      <div class="auth-feature"><span class="feature-icon">🚀</span> Ready in 30 seconds</div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <h2 class="auth-title">Create account</h2>
+      <p class="auth-subtitle">Join thousands of productive people</p>
+
+      <%= form_with model: @user, url: signup_path, id: "signup-form" do |f| %>
+        <% if @user.errors.any? %>
+          <div class="form-errors" id="form-errors">
+            <% @user.errors.full_messages.each do |msg| %>
+              <div class="form-error-item">⚠ <%= msg %></div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="form-group">
+          <%= f.label :name, "Full name", class: "form-label" %>
+          <%= f.text_field :name, class: "form-control #{'input-error' if @user.errors[:name].any?}",
+              placeholder: "Jane Smith", id: "input-name", autocomplete: "name", required: true %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :email, "Email address", class: "form-label" %>
+          <%= f.email_field :email, class: "form-control #{'input-error' if @user.errors[:email].any?}",
+              placeholder: "you@example.com", id: "input-email", autocomplete: "email", required: true %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :password, "Password", class: "form-label" %>
+          <%= f.password_field :password, class: "form-control #{'input-error' if @user.errors[:password].any?}",
+              placeholder: "Min 6 characters", id: "input-password", autocomplete: "new-password", required: true %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :password_confirmation, "Confirm password", class: "form-label" %>
+          <%= f.password_field :password_confirmation, class: "form-control",
+              placeholder: "••••••••", id: "input-password-confirm", autocomplete: "new-password", required: true %>
+        </div>
+
+        <%= f.submit "Create Account", class: "btn btn-primary btn-full", id: "btn-signup" %>
+      <% end %>
+
+      <p class="auth-switch">
+        Already have an account? <%= link_to "Sign in", login_path, id: "link-login" %>
+      </p>
+    </div>
+  </div>
+</div>

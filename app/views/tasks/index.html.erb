@@ -1,0 +1,111 @@
+<% content_for :title, "Tasks" %>
+<% content_for :page_title, "All Tasks" %>
+
+<div class="tasks-page">
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filter-bar">
+  <div class="filter-tabs">
+    <% [
+      ["All",        nil,          "all"],
+      ["Pending",    "pending",    "pending"],
+      ["Completed",  "completed",  "completed"],
+      ["Overdue",    "overdue",    "overdue"],
+      ["🔥 High",   "high",       "high"],
+      ["Today",      "today",      "today"]
+    ].each do |label, filter_val, key| %>
+      <a href="<%= tasks_path(filter: filter_val) %>"
+         class="filter-tab <%= @filter == key ? 'active' : '' %>"
+         id="filter-<%= key %>">
+        <%= label %>
+        <% count = @filter_counts[key].to_i %>
+        <% if count > 0 %>
+          <span class="filter-count"><%= count %></span>
+        <% end %>
+      </a>
+    <% end %>
+  </div>
+    <div class="sort-select-wrap">
+      <select id="sort-select" class="sort-select" onchange="window.location.href='<%= tasks_path(filter: @filter) %>&sort=' + this.value">
+        <option value="default" <%= "selected" if @sort == "default" %>>Sort: Default</option>
+        <option value="priority" <%= "selected" if @sort == "priority" %>>Sort: Priority</option>
+        <option value="due_date" <%= "selected" if @sort == "due_date" %>>Sort: Due Date</option>
+        <option value="created" <%= "selected" if @sort == "created" %>>Sort: Newest</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Task count -->
+  <div class="task-count-bar" id="task-count">
+    <span><%= @tasks.count %> <%= "task".pluralize(@tasks.count) %></span>
+  </div>
+
+  <% if @tasks.empty? %>
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">🎉</div>
+      <p class="empty-text">
+        <% if @filter == "completed" %>No completed tasks yet.<% elsif @filter == "overdue" %>No overdue tasks — great work!<% else %>No tasks found.<% end %>
+      </p>
+      <%= link_to "+ Create a task", new_task_path, class: "btn btn-primary", id: "btn-create-from-empty" %>
+    </div>
+  <% else %>
+    <!-- Tasks table -->
+    <div class="tasks-table" id="tasks-table">
+      <div class="table-header">
+        <div class="th-check"></div>
+        <div class="th-title">Task</div>
+        <div class="th-priority">Priority</div>
+        <div class="th-due">Due Date</div>
+        <div class="th-status">Status</div>
+        <div class="th-actions">Actions</div>
+      </div>
+
+      <% @tasks.each do |task| %>
+        <div class="table-row <%= task.completed? ? 'row-completed' : '' %> <%= task.overdue? ? 'row-overdue' : '' %>" id="table-task-<%= task.id %>">
+          <div class="td-check">
+            <%= button_to toggle_complete_task_path(task), method: :patch,
+                class: "check-btn #{'checked' if task.completed?}",
+                id: "toggle-table-#{task.id}",
+                title: task.completed? ? "Mark incomplete" : "Mark complete",
+                form: { data: { turbo: false } } do %>
+              <%= task.completed? ? "✓" : "" %>
+            <% end %>
+          </div>
+
+          <div class="td-title">
+            <span class="task-title-text <%= 'strikethrough' if task.completed? %>">
+              <%= link_to task.title, task_path(task), class: "task-link", id: "task-link-#{task.id}" %>
+            </span>
+            <% if task.description.present? %>
+              <span class="task-desc-preview"><%= truncate(task.description, length: 60) %></span>
+            <% end %>
+          </div>
+
+          <div class="td-priority">
+            <span class="badge badge-<%= task.priority %>" id="badge-priority-<%= task.id %>"><%= task.priority_label %></span>
+          </div>
+
+          <div class="td-due <%= task.overdue? ? 'text-danger' : '' %>">
+            <% if task.due_date.present? %>
+              <%= task.overdue? ? "⚠ " : "" %><%= task.due_date.strftime("%b %d, %Y") %>
+            <% else %>
+              <span class="text-muted">—</span>
+            <% end %>
+          </div>
+
+          <div class="td-status">
+            <span class="status-pill status-<%= task.status_label.downcase.gsub(' ', '-') %>">
+              <%= task.status_label %>
+            </span>
+          </div>
+
+          <div class="td-actions">
+            <%= link_to "✏", edit_task_path(task), class: "action-btn", id: "edit-table-task-#{task.id}", title: "Edit" %>
+            <%= button_to "✕", task_path(task), method: :delete, class: "action-btn action-delete",
+                id: "delete-table-task-#{task.id}",
+                form: { data: { turbo_confirm: "Delete '#{task.title}'? This cannot be undone." } } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
